@@ -1,0 +1,7 @@
+*.hex
+*.lst
+*.lss
+*.o
+*.elf
+*.s
+.sconsign.dblite
