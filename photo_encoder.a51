@@ -97,11 +97,12 @@ ENDM
 ; The current state is returned in the two LSBs of `A`.
 ; Uses registers 0 through 4 and some bytes on the stack.
 READ_STATE:
-    MOV R2, #PORT_EXPANDER_ADDRESS
-    MOV R1, #1
-    MOV R0, #AR3
-    CALL PE0Read
-    MOV A, R3
+;    MOV R2, #PORT_EXPANDER_ADDRESS
+;    MOV R1, #1
+;    MOV R0, #AR3
+;    CALL PE0Read
+;    MOV A, R3
+    MOV A, P1
     ;MOV P1, A
     ROTATE_RIGHT R4
     ANL A, #11b
@@ -169,8 +170,8 @@ PRINT_STATE:
     CALL WRITEFIXSTR
     JMP LOOP
 
-MILLIMETERS: DB " mm", 13, 10
-NO_UNIT: DB 13, 10
+MILLIMETERS: DB " mm", 13, 10, 0
+NO_UNIT: DB 13, 10, 0
 
 DSEG
 

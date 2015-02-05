@@ -20,12 +20,6 @@ _BIN_TO_DEC_LOOP:
         DIV AB
         MOV R3, A
         DJNZ R1, _BIN_TO_DEC_LOOP
-        ; ugly hack!
-        MOV @R0, #'m'
-        INC R0
-        MOV @R0, #'m'
-        INC R0
-        MOV @R0, #0
         RET
 
 $LIST
