@@ -5,3 +5,5 @@
 *.elf
 *.s
 .sconsign.dblite
+
+.ipynb_checkpoints/
