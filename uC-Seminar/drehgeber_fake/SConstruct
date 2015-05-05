@@ -1,0 +1,134 @@
+"""     SConstruct
+#
+#       Copyright 2008 Markus Burrer & CJT, cjt@users.sourceforge.net,
+#       from: http://www.wiki.elektronik-projekt.de/mikrocontroller/avr/scons_avr
+#       Copyright (C) 2010 by Homin Lee <ff4500@gmail.com>
+#       from http://code.google.com/p/arscons/
+#       Copyright 2012, 2015 narpfel
+#
+#       This program is free software; you can redistribute it and/or modify
+#       it under the terms of the GNU General Public License as published by
+#       the Free Software Foundation; either version 3 of the License, or
+#       (at your option) any later version.
+#       This program is distributed in the hope that it will be useful,
+#       but WITHOUT ANY WARRANTY; without even the implied warranty of
+#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#       GNU General Public License for more details.
+#       You should have received a copy of the GNU General Public License
+#       along with this program; if not, write to the Free Software
+#       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#       MA 02110-1301, USA.
+"""
+
+avr = Environment()
+
+target = ARGUMENTS.get("TARGET", "main")
+mcu = ARGUMENTS.get("MCU", "atmega168pa")
+
+F_CPU = ARGUMENTS.get("F_CPU", "1000000ULL")
+
+debug = ARGUMENTS.get("debug", "")
+
+# Add all additional source files to compile
+src =   """
+        """
+            #interrupt.S
+        #"""
+
+# Add source path here
+cpppath =   """
+                .
+            """
+
+# Optimization level, can be [0, 1, 2, 3, s].
+# 0 = turn off optimization. s = optimize for size.
+# (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
+opt = ARGUMENTS.get("OPT", "3")
+
+# Add additional compiler flags
+flags = """
+            -Wall
+            -ffunction-sections
+            -fdata-sections
+            -fno-exceptions
+            -funsigned-char
+            -funsigned-bitfields
+            -fpack-struct
+            -fshort-enums
+            -pedantic
+        """
+
+# Additional defines for the compiler
+defines =   {
+                "F_CPU": F_CPU,
+            }
+
+# Add variant dirs
+#~ avr.VariantDir("build", "src")
+
+
+# Set environment parameters
+avr["CC"] = "avr-gcc"# -mmcu=%s" % mcu
+avr["CXX"] = "avr-g++"
+avr["AS"] = "avr-gcc"
+
+avr.Append(CPPPATH = Split(cpppath))
+
+avr.Append(CCFLAGS = "-O%s" % opt)
+
+if debug:
+    avr.Append(CCFLAGS = "-g%s" % debug)
+
+avr.Append(CCFLAGS = "-mmcu=%s" % mcu)
+avr.Append(CCFLAGS = ARGUMENTS.get("CCFLAGS"))
+avr.Append(CCFLAGS = Split(flags))
+
+avr.Append(CFLAGS = "-std=gnu99")
+
+#~ avr.Append(ASFLAGS = ['-x assembler-with-cpp','-mmcu=%s'%mcu])
+avr.Append(ASFLAGS = ['-mmcu=%s'%mcu])
+
+avr.Append(CPPDEFINES = defines)
+
+avr.Append(TOOLS = ['gcc', 'g++', 'as'])
+
+elf_builder = Builder(action = "avr-gcc "+
+        "-mmcu=%s -Os -Wl,--gc-sections -o $TARGET $SOURCES" % mcu,
+        suffix = ".elf")
+
+hex_builder = Builder(action = "avr-objcopy "+
+        "-O ihex -R .eeprom $SOURCES $TARGET",
+        suffix = ".hex",
+        src_suffix = ".elf")
+
+# Environment for building assembler files from source
+asm_env = avr.Clone(OBJSUFFIX = ".s")
+asm_env.Append(CCFLAGS = "-S")
+
+avr.Append(BUILDERS={"Elf": elf_builder})
+avr.Append(BUILDERS={"Hex": hex_builder})
+
+# Execute avr-gcc
+source_files = Split(target + ".c " + src)
+objects = avr.Object(source_files)
+
+# Build elf
+avr.Elf(target, objects)
+
+# Build hex file
+hex_file = avr.Hex(target, target)
+
+# Show memory usage
+mem = avr.Command(None, target + ".elf", "avr-size $SOURCE")
+
+asm_env.Alias("asm", asm_env.Object(source_files))
+
+# By default, build hex file and show size
+Default(None)
+Default([mem, hex_file])
+
+flash = avr.Alias("upload", hex_file, "avrdude -c usbtiny -p m168p -e -U "
+                    "flash:w:$SOURCE:a")
+upload = flash
+
+AlwaysBuild(upload)
