@@ -23,6 +23,7 @@ const SIMULATIONS: usize = 10_000;
 impl Rand for Vector3D {
     /// Random unit vector, method 4 from Marsaglia, G. “Choosing a Point from the Surface of a
     /// Sphere.” Ann. Math. Stat. 43, 645-646, 1972.
+    /// See https://projecteuclid.org/download/pdf_1/euclid.aoms/1177692644.
     fn rand<R: Rng>(rng: &mut R) -> Vector3D {
         let range = Range::new(NEG_1_PLUS_EPS, 1.0);
         loop {
